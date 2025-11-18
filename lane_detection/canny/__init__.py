@@ -1,12 +1,8 @@
 """
-Canny Edge Detector Modules
+Canny Edge Detector Module
 """
 
-from .mask import GaussianMask
-from .convolution import Convolver
-from .gradient import Gradient
-from .non_max_suppress import NonMaxSuppresser
-from .hysteresis import Hysteresis
+from .canny import canny_edge_detector
 
-__all__ = ['GaussianMask', 'Convolver', 'Gradient', 'NonMaxSuppresser', 'Hysteresis']
+__all__ = ['canny_edge_detector']
 
