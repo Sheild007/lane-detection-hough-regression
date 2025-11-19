@@ -3,7 +3,7 @@ import cv2
 from lane_detection.hough import HoughTransform
 from lane_detection.regression import LinearRegression
 from lane_detection.color_filter import ColorFilter
-from lane_detection.canny import canny_edge_detector, apply_gaussian_filter
+from lane_detection.canny import canny_edge_detector
 
 class LaneDetector:
     def __init__(self, canny_low=15, canny_high=50):
