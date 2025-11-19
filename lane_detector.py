@@ -115,4 +115,64 @@ class LaneDetector:
                 right_line = self.linear_regression.get_line_points(slope, intercept, y_bottom, y_top)
         return left_line, right_line
     
+    def draw_lane_lines(self, image, left_line, right_line):
+        result = image.copy()
+        if left_line:
+            cv2.line(result, (left_line[0], left_line[1]), (left_line[2], left_line[3]), (0, 0, 255), 10)
+        if right_line:
+            cv2.line(result, (right_line[0], right_line[1]), (right_line[2], right_line[3]), (0, 0, 255), 10)
+        return result
     
+    def process_image(self, image, save_intermediate=False):
+        results = {}
+        h, w = image.shape[:2]
+        
+        # 1. HSV
+        hsv_image = self.color_filter.rgb_to_hsv(image) # Allowed built-in
+        results['hsv'] = hsv_image 
+
+        # 2. Gaussian Blur 
+        blurred_rgb = apply_gaussian_filter(image, kernel_size=5, sigma=1.0)
+        results['gaussian_filtered'] = blurred_rgb
+
+        # 3. Color Filter 
+        binary_B = np.ones((h, w), dtype=np.uint8)
+        color_mask = self.color_filter.filter_binary_image(binary_B, hsv_image)
+        dilated_mask = self.manual_dilate(color_mask, kernel_size=3)
+        results['color_filtered'] = dilated_mask * 255
+
+        # 4. Grayscale
+        gray = cv2.cvtColor(blurred_rgb, cv2.COLOR_RGB2GRAY) # Allowed built-in
+        gray_enhanced = self.apply_contrast_enhancement(gray) # MANUAL EQ
+        results['grayscale'] = gray_enhanced
+        
+        # 5. Canny
+        canny_edges = canny_edge_detector(
+            gray_enhanced, 
+            binary_mask=dilated_mask, 
+            low_threshold=self.canny_low, 
+            high_threshold=self.canny_high
+        )
+        results['canny_edges'] = canny_edges
+
+        # 6. ROI 
+        roi_mask, _ = self.define_region_of_interest(image)
+        roi_edges = self.apply_roi_mask(canny_edges, roi_mask)
+        results['roi_mask'] = roi_mask
+        results['roi_edges'] = roi_edges
+
+        # 7. Hough
+        lines = self.hough_transform.transform(roi_edges)
+        hough_viz = image.copy()
+        if lines:
+            for l in lines:
+                cv2.line(hough_viz, (l[0], l[1]), (l[2], l[3]), (0, 255, 0), 2)
+        results['hough_lines_viz'] = hough_viz
+        results['hough_data'] = lines
+
+        # 8. Filter & Regression
+        left_lines, right_lines = self.filter_lines_by_slope(lines, w)
+        left_fit, right_fit = self.fit_lane_lines(left_lines, right_lines, image.shape)
+        results['final'] = self.draw_lane_lines(image, left_fit, right_fit)
+        
+        return results
