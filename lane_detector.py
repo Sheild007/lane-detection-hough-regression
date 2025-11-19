@@ -72,3 +72,24 @@ class LaneDetector:
     
   
     
+    def filter_lines_by_slope(self, lines, image_width):
+        left_lines = []
+        right_lines = []
+        if lines is None: 
+            return [], []
+        center_x = image_width / 2
+        for line in lines:
+            x1, y1, x2, y2 = line
+            if x2 - x1 == 0:
+                continue 
+            slope = (y2 - y1) / (x2 - x1)
+            if abs(slope) < 0.3: 
+                continue
+            line_center = (x1 + x2) / 2
+            if slope < 0 and line_center < center_x: 
+                left_lines.append(line)
+            elif slope > 0 and line_center > center_x: 
+                right_lines.append(line)
+        return left_lines, right_lines
+    
+    
