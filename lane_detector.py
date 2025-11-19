@@ -92,4 +92,27 @@ class LaneDetector:
                 right_lines.append(line)
         return left_lines, right_lines
     
+    def fit_lane_lines(self, left_lines, right_lines, image_shape):
+        h, w = image_shape[:2]
+        y_bottom = h
+        y_top = int(h * 0.65)
+        def get_points(lines):
+            pts = []
+            for x1, y1, x2, y2 in lines:
+                pts.append([x1, y1])
+                pts.append([x2, y2])
+            return pts
+        left_line, right_line = None, None
+        left_pts = get_points(left_lines)
+        if len(left_pts) > 0:
+            slope, intercept = self.linear_regression.fit(left_pts)
+            if slope is not None and abs(slope) > 0.2: 
+                left_line = self.linear_regression.get_line_points(slope, intercept, y_bottom, y_top)
+        right_pts = get_points(right_lines)
+        if len(right_pts) > 0:
+            slope, intercept = self.linear_regression.fit(right_pts)
+            if slope is not None and abs(slope) > 0.2:
+                right_line = self.linear_regression.get_line_points(slope, intercept, y_bottom, y_top)
+        return left_line, right_line
+    
     
