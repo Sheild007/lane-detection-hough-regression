@@ -19,8 +19,7 @@ class LaneDetector:
        
         padded = np.pad(image, ((pad, pad), (pad, pad)), mode='constant')
         output = np.zeros_like(image)
-        
-
+    
         for i in range(kernel_size):
             for j in range(kernel_size):
                 shifted = padded[i:i+image.shape[0], j:j+image.shape[1]]
@@ -31,10 +30,7 @@ class LaneDetector:
       
      
         hist, bins = np.histogram(gray_image.flatten(), 256, [0,256])
-        
-        
         cdf = hist.cumsum()
-    
         cdf_m = np.ma.masked_equal(cdf, 0) 
         cdf_m = (cdf_m - cdf_m.min()) * 255 / (cdf_m.max() - cdf_m.min())
         cdf = np.ma.filled(cdf_m, 0).astype('uint8')
@@ -69,8 +65,6 @@ class LaneDetector:
         masked_image = image.copy()
         masked_image[roi_mask == 0] = 0
         return masked_image
-    
-  
     
     def filter_lines_by_slope(self, lines, image_width):
         left_lines = []
